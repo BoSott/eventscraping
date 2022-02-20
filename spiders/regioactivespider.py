@@ -4,6 +4,9 @@ from scrapy.loader import ItemLoader
 import re
 
 class RegioActiveSpider(scrapy.Spider):
+    """This class defines a spider for the scraping of regioactive.de"""
+
+    # define spider name and start urls
     name = "regioactive"
     start_urls = ['https://www.regioactive.de/events/20600/mannheim/veranstaltungen-party-konzerte/2022-02-02']
 
@@ -25,10 +28,19 @@ class RegioActiveSpider(scrapy.Spider):
 
 
     def parse(self, response):
+        """Parses the given regioactive url.
+
+        Args:
+            response (object): Internally created response of given start_urls
+        """
+        # extract container where all events are in
         events = response.css('.hcont')
 
         num = 0
+        # go through each event and extract the required information
         for event in events:
+
+            # Create itemloader of class RegioaActiveScraperItem -> defines default values, input- and output_processors
             l = ItemLoader(item=RegioaActiveScraperItem(), selector=event)
 
             l.add_css('name_event', 'span.summary::text')
@@ -62,9 +74,11 @@ class RegioActiveSpider(scrapy.Spider):
         else:
             self.counter_date = 5
 
+        # get response of next page url
         next_page = response.xpath('.//li[contains(concat(" ", normalize-space(@class), " "), " ncurrent ")]//@href').getall()[self.counter_date]
         self.event_list.append(response.xpath('.//li[contains(concat(" ", normalize-space(@class), " "), " ncurrent ")]//@href').getall())
 
+        # if next_page exists and a total of 10 scraped pages is not exceeded, continue
         if next_page is not None and self.counter < 10:
             self.counter += 1
             print(next_page)

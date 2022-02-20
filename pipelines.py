@@ -2,6 +2,7 @@ from scrapy.exceptions import DropItem
 import logging
 
 class EventscraperPipelineDefault:
+    """Defines pipeline to set default values of scraped items if those are None."""
     def process_item(self, item, spider):
 
         item.setdefault('name_event', 'Here Could Be A Name')
@@ -20,7 +21,7 @@ class EventscraperPipelineDefault:
         return item
 
 class DropIfEmptyFieldPipeline(object):
-
+    """Drop item (row) if either no longitude or latitude is given. Those are crucial in following steps."""
     def process_item(self, item, spider):
         try:
             if not(item["longitude"]) or not(item["latitude"]):

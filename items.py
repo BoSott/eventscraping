@@ -15,7 +15,6 @@ def string_to_float(value):
         value = float(value)
     except:
         return None
-    # if isinstance(value, float):
     return value
 
 def string_to_int(value):
@@ -49,6 +48,7 @@ def check_image_url(value):
 
 
 def only_get_time(value):
+    """Create datetime object of date column, only containing the time."""
     try:
         t = datetime.datetime.fromisoformat(value)
     except:
@@ -57,6 +57,7 @@ def only_get_time(value):
 
 
 def only_get_date(value):
+    """Create datetime object of date column, only containing the date."""
     try:
         t = datetime.datetime.fromisoformat(value)
     except:
@@ -71,6 +72,7 @@ def extend_link_event(value):
 
 # @dataclass
 class RegioaActiveScraperItem(scrapy.Item):
+    """Class defines scrapy items, their input- and output_processors"""
 
     name_event = scrapy.Field(input_processor = MapCompose(remove_tags, remove_whitespace), output_processor = TakeFirst())
     date = scrapy.Field(input_processor = MapCompose(remove_tags, only_get_date), output_processor = TakeFirst())
@@ -123,6 +125,7 @@ def simplify_cat_eventfinder(value):
 
 
 class EventFinderScraperItem(scrapy.Item):
+    """Class defines scrapy items, their input- and output_processors"""
 
     name_event = scrapy.Field(input_processor = MapCompose(remove_tags, remove_whitespace), output_processor = TakeFirst())
     date = scrapy.Field(input_processor = MapCompose(remove_tags, change_date), output_processor = TakeFirst())

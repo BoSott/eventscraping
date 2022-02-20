@@ -19,6 +19,9 @@ class TheLoader(ItemLoader):
 
 
 class EventFinderSpider(scrapy.Spider):
+    """This class defines a spider for the scraping of eventfinder.de"""
+
+    # define spider name and start urls
     name = 'eventfinder'
     start_urls = ['https://www.eventfinder.de/veranstaltungen-mannheim.php']
     counter = 2
@@ -34,10 +37,16 @@ class EventFinderSpider(scrapy.Spider):
     }
 
 
-    def parse(self, response):        
+    def parse(self, response):
+        """Parses the given regioactive url.
+
+        Args:
+            response (object): Internally created response of given start_urls
+        """
         # get event container
         events = response.css('div[id^="\/veranstaltung"]')
 
+        # go through each event and extract the required information
         for event in events:
             l = ItemLoader(item=EventFinderScraperItem(), selector=event)
             l.add_xpath('date', './/time[@class="tmtime"]/span[2]//text()')
@@ -50,13 +59,10 @@ class EventFinderSpider(scrapy.Spider):
             l.add_value('website', self.base_url.split(".")[1].capitalize())
 
             # link event location
-            # get coordinates
-            # city
-            # postal code
-            # street address
+            # get coordinates, city, postal code, street address
             eventlocationpage = event.xpath('.//*[contains(@class, "col-sm-8")]//@href').get()
 
-            # get category
+            # get category and event name
             eventpage = event.xpath('.//section[@class="linked"]/a/@href').get()
             
             event_item = l.load_item()
@@ -76,6 +82,7 @@ class EventFinderSpider(scrapy.Spider):
 
  
     def parse_eventpage(self, response):
+        """Parses the child eventpage of the given event."""
         loader = response.meta['loader']        
         loader.add_xpath('name_event', './/h2[@class="no-margin-bottom"]/text()')
         v = response.xpath('.//ul[contains(concat(" ", normalize-space(@class), " "), " blog-tags ")]/li[2]/a/text()').get()
@@ -83,8 +90,8 @@ class EventFinderSpider(scrapy.Spider):
         yield loader.load_item()
 
 
-
     def parse_eventlocation(self, response):
+        """Parses the child eventlocationpage of the given event."""
         event_item = response.meta['event_item']
         event_page = response.meta['event_page']
         loader = ItemLoader(item=event_item, response=response)
@@ -93,4 +100,6 @@ class EventFinderSpider(scrapy.Spider):
         loader.add_xpath('street', './/h3[@class="margin-bottom-25"]/span/text()')
         loader.add_xpath('postal_code', './/h3[@class="margin-bottom-25"]/span[2]/text()')
         loader.add_xpath('city', './/h3[@class="margin-bottom-25"]/span[3]/text()')
+        # chain responses -> yield the parse_eventpage function so that all is added to one item
+        # drawback -> not asynchronous anymore -> takes quite some more time
         yield response.follow(event_page, callback = self.parse_eventpage, meta={'loader' : loader, 'event_page': event_page}, dont_filter = True) 
